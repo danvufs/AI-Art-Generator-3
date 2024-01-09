@@ -219,10 +219,10 @@ function App() {
                 <CircularProgress size={24} color="secondary" />
               ) : null
             } // Show loading indicator as the startIcon when loading
-            // style={{
-            //   maxWidth: '200px',
-            //   alignItems: 'center',
-            // }}
+          // style={{
+          //   maxWidth: '200px',
+          //   alignItems: 'center',
+          // }}
           >
             {isLoading ? "Generating..." : "Generate"}
           </Button>
@@ -262,19 +262,15 @@ function App() {
           message={errorMessage}
         />
       </div>
-      <BottomNavigation showLabels className="BottomNavigation">
-        <BottomNavigationAction
-          label="LinkedIn"
-          icon={<LinkedInIcon />}
-          onClick={() =>
-            window.open("https://www.linkedin.com/in/danducvu", "_blank")
-          }
-        />
-        <BottomNavigationAction
-          label="GitHub"
-          icon={<GitHubIcon />}
-          onClick={() => window.open("https://github.com/danvufs", "_blank")}
-        />
+      <BottomNavigation showLabels className="BottomNavigation" style={{ backgroundColor: '#1976D2', color: 'white' }}>
+
+        {/* Copyright Information */}
+        <div style={{ flexGrow: 1, textAlign: 'center', padding: '15px', color: 'white' }}>
+          © {new Date().getFullYear()} AI Art Generator. All rights reserved.
+        </div>
+
+        {/* <BottomNavigationAction label="LinkedIn" icon={<LinkedInIcon />} />
+  <BottomNavigationAction label="GitHub" icon={<GitHubIcon />} /> */}
       </BottomNavigation>
       <Analytics />
     </div>
