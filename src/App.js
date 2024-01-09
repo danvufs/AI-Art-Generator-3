@@ -246,6 +246,7 @@ function App() {
               onClick={handleReset}
               style={{
                 marginTop: "20px",
+                marginLeft: "5px",
                 fontSize: "1rem",
                 borderRadius: "4px",
               }}
