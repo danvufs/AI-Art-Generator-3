@@ -117,6 +117,7 @@ function App() {
     setImageURL("");
     setIsLoading(false);
     setSnackbarOpen(false);
+    setRevisedPrompt("");
   };
 
   const handleCloseSnackbar = () => {
