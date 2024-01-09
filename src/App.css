@@ -1,0 +1,264 @@
+/* Use CSS variables for colors */
+:root {
+  --primary-color: #4A90E2; /* A bright blue for primary actions */
+  --secondary-color: #f1f1f7; /* A very dark gray as the secondary background color */
+  --background-color: #f9f9f6; /* A rich black for the main background */
+  --text-color: #E0E0E0; /* A light gray for text */
+  --subtext-color: #9E9E9E; /* A softer gray for subtitles and less important text */
+  --error-color: #FF3B30; /* A bright red for errors, keeping accessibility in mind */
+  --accent-color: #34C759; /* A fresh green for success states or accents */
+}
+
+
+/* General App styling */
+.App {
+  text-align: center;
+  font-family: "Bricolage Grotesque", sans-serif;
+  /* background-image: url('/src/5.png'); */
+  /* background-image: linear-gradient(to right, #434343 0%, black 100%);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: #f9f9f9; */
+  background-color: var(--background-color);
+  color: var(--text-color);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
+  padding: 0 1rem;
+}
+
+
+.App-logo {
+  width: auto;
+  height: 50px;
+  /* animation: spin infinite 20s linear; */
+  margin: 8px auto;
+  margin-bottom: 1rem;
+}
+
+/* Container for main content */
+.container {
+  margin: 1rem auto;
+  width: 70%;
+  flex: 1;
+  padding-top: 85px;
+  border-radius: 8px;
+  transition: box-shadow 0.3s ease-in-out;
+  background-color: var(--secondary-color);
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+}
+
+.AppBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #1C1C1E;
+  padding: 10px 1rem;
+}
+
+.BottomNavigation {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+/* Form and input styling */
+.input-form {
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  /* border: 1px solid #333; */
+  background-color: var(--secondary-color);
+}
+
+.input-prompt,
+.textarea,
+.input-style {
+  padding: 0.8rem;
+  font-size: 1rem;
+  border: 2px solid #ddd;
+  border-radius: 16px;
+  background-color: #2C2C2E;
+  color: var(--text-color);
+  border-color: #3A3A3C;
+}
+
+.input-prompt:focus,
+.textarea:focus,
+.input-style:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+/* Select styling with custom arrow */
+.select-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  /* background-color: var(--primary-color); */
+}
+
+.select-wrapper {
+  position: relative;
+  flex: 1;
+  /* border: 1px solid #333; */
+  background-color: var(--secondary-color);
+}
+
+.option-select {
+  width: 100%;
+  appearance: none;
+  padding: 0.7rem 1.5rem 0.7rem 1rem;
+  font-size: 1rem;
+  /* color of the text is yellow*/
+  color: #af1010 !important;
+
+  background-color: #f8f4f4;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  position: relative;
+  cursor: pointer;
+}
+
+.option-select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(18, 18, 18, 0.2);
+}
+
+.option-select:hover {
+  border-color: var(--primary-color);
+}
+
+.tabs-container {
+  margin-bottom: 1rem;
+}
+/* Ensure the Generate button has a gap above it */
+.generate-button {
+  margin-top: 10px !important;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  box-shadow: 0 4px 6px 0 rgba(0,0,0,0.2);
+}
+.generate-button:hover {
+  background-color: darken(var(--primary-color), 10%);
+}
+/* Loading indicator styling */
+.loading-indicator {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid var(--primary-color);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 2s linear infinite;
+  margin: 20px auto;
+}
+
+/* Place Snackbar directly under the Generate button */
+.snackbar-limit-reached {
+  position: fixed;
+  top: 50%;
+  left: 50% !important;
+  transform: translate(-50%, -50%); 
+  z-index: 1000;
+}
+
+.form-container {
+  position: relative; /* New container for the form and Snackbar */
+  margin-bottom: 2rem; /* Space below the container */
+}
+
+/* Toolbar adjustments */
+.AppBar .MuiToolbar-root {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Sign Out button styling */
+.sign-out-button {
+  padding: 4px 8px !important;
+  min-width: 0;
+  font-size: 0.7rem !important;
+  margin-left: 0px !important;
+  /* margin-right: 30px !important; */
+}
+
+
+/* Language and Sign Out buttons container */
+.language-signout-container {
+  display: flex;
+  align-items: center;
+  gap: 5px; /* Adjust as needed for spacing */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Image display enhancements */
+.image-container {
+  margin-top: 20px;
+  display: flex;
+}
+
+.generated-image {
+  max-width: 100%;
+  margin-top: 10px;
+  margin-bottom: 40px;
+  border-radius: 8px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.revised-prompt {
+  font-size: 1rem;
+  color: #181515;
+  margin-bottom: 0.5rem;
+}
+/* .generated-image:hover {
+  transform: scale(1.05);
+  transition: transform 0.3s ease-in-out;
+} */
+
+/* Responsive design adjustments */
+@media (max-width: 768px) {
+  .container {
+    width: 85%;
+  }
+  
+  .input-prompt {
+    font-size: 0.9rem;
+  }
+  
+  .generate-button {
+    padding: 0.5rem;
+  }
+}
+
+/* Importing the specified font */
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600&display=swap");
+
+@media (min-width: 1400px) {
+  .container {
+    margin: 1rem auto;
+    /* width: 95%; */
+    /* flex: 1;
+    padding-top: 70px;
+    border-radius: 8px;
+    transition: box-shadow 0.3s ease-in-out;
+    background-color: var(--secondary-color);
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); */
+  }
+  
+
+}

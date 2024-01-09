@@ -1,0 +1,65 @@
+/* AdminPage.css */
+.admin-container {
+    padding: 40px;
+    margin-top: 25px;
+    margin-bottom: 25px;
+  }
+ 
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.admin-table th {
+  background-color: #f2f2f2;
+  color: black;
+}
+
+/* .admin-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+  background-color: rgba(255, 255, 255, 0.5);
+} */
+
+.admin-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+.admin-table button {
+  margin-right: 10px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+/* Responsive for mobile */
+@media screen and (max-width: 600px) {
+  .admin-container {
+    padding: 40px;
+    margin-top: 25px;
+    margin-bottom: 35px;
+  }
+
+  .admin-table th, .admin-table td {
+    padding: 8px 5px;
+  }
+  .admin-table th {
+    color: black !important;
+  }
+
+  .admin-table button {
+    margin: 5px 2px; /* Adjust margins for smaller screens */
+    padding: 3px 5px;
+  }
+
+  /* Optional: Hide less important columns on smaller screens */
+  /* .admin-table th:nth-child(2), .admin-table td:nth-child(2),
+  .admin-table th:nth-child(4), .admin-table td:nth-child(4) {
+    display: none;
+  } */
+}
