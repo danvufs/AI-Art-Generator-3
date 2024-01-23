@@ -1,6 +1,5 @@
 // // //App.js
 
-
 import React, { useState, useEffect } from "react";
 import { OpenAI } from "openai";
 import Button from "@mui/material/Button";
@@ -11,14 +10,8 @@ import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import BottomNavigation from "@mui/material/BottomNavigation";
-// import BottomNavigationAction from "@mui/material/BottomNavigationAction";
-// import LinkedInIcon from "@mui/icons-material/LinkedIn";
-// import GitHubIcon from "@mui/icons-material/GitHub";
-import { Analytics } from "@vercel/analytics/react";
-//import Box from '@mui/material/Box';
 import "./App.css";
 
-// Helper function to get today's date as a string
 const getTodayString = () => {
   const today = new Date();
   return today.toISOString().split("T")[0];
@@ -29,14 +22,12 @@ function App() {
   const [style, setStyle] = useState("🎨 Oil Painting");
   const [mood, setMood] = useState("😌 Serene");
   const [activeTab, setActiveTab] = useState("manual");
-  const [imageURL, setImageURL] = useState("");
+  const [imageURLs, setImageURLs] = useState([]); // Changed to handle multiple images
   const [isLoading, setIsLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [error, setError] = useState(false);
-  const [revisedPrompt, setRevisedPrompt] = useState("");
 
-  // Replace with your own OpenAI API key
   const openai = new OpenAI({
     apiKey: process.env.REACT_APP_OPENAI_API_KEY,
     dangerouslyAllowBrowser: true,
@@ -46,64 +37,56 @@ function App() {
 
   useEffect(() => {
     const today = getTodayString();
-    const imageCount = parseInt(localStorage.getItem(today), 10) || 0;
-    setDailyLimitReached(imageCount >= 5);
+    const imageCount = parseInt(localStorage.getItem(today), 100) || 0;
+    setDailyLimitReached(imageCount >= 100); // Adjusted limit for 5 images per request
   }, []);
 
   const incrementImageCount = () => {
     const today = getTodayString();
-    const imageCount = parseInt(localStorage.getItem(today), 10) || 0;
-    localStorage.setItem(today, imageCount + 1);
+    const imageCount = parseInt(localStorage.getItem(today), 100) || 0;
+    localStorage.setItem(today, imageCount + 5); // Increment by 5 for each request
+  };
+
+  const generateImage = async (prompt) => {
+    try {
+      const response = await openai.images.generate({
+        model: 'dall-e-3',
+        prompt: prompt,
+        n: 1, // As per the API requirement
+        size: '1024x1024',
+      });
+      return response.data[0].url;
+    } catch (error) {
+      console.error('Error generating the image:', error);
+      throw error;
+    }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    // Check if daily limit is reached
     if (dailyLimitReached) {
-      setErrorMessage(
-        "Daily limit of 5 images reached. Please try again tomorrow."
-      );
+      setErrorMessage("Daily limit reached. Please try again tomorrow.");
       setError(true);
       setSnackbarOpen(true);
       return;
     }
-
     setIsLoading(true);
-
-    const combinedPrompt =
-      activeTab === "manual"
-        ? inputPrompt
-        : `${inputPrompt}, Style: ${style}, Mood: ${mood}`;
-
+    
+    const combinedPrompt = `${inputPrompt}, Style: ${style}, Mood: ${mood}`;
     try {
-      const response = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: combinedPrompt,
-        n: 1,
-        size: "1024x1024",
-      });
-      console.log("Response from OpenAI:", response);
-      setRevisedPrompt(response.data[0].revised_prompt);
-      setImageURL(response.data[0].url);
+      // Loop to make 5 separate API calls
+      const imageRequests = [];
+      for (let i = 0; i < 5; i++) {
+        imageRequests.push(generateImage(combinedPrompt));
+      }
 
-      // Increment image count
-      incrementImageCount();
-      const today = getTodayString();
-      const imageCount = parseInt(localStorage.getItem(today), 10) || 0;
-      if (imageCount >= 5) {
-        setDailyLimitReached(true);
-      }
+      // Wait for all the image requests to complete
+      const imageUrls = await Promise.all(imageRequests);
+      setImageURLs(imageUrls); // Set the array of image URLs
+
+      incrementImageCount(5); // Increment by 5 for each batch request
     } catch (error) {
-      console.error("Error generating the image:", error);
-      // Extracting the error message properly from the response
-      let errorMessage =
-        "An unexpected error occurred with the API. Please try again later";
-      if (error instanceof Error) {
-        // Check if the error is an instance of the Error class
-        errorMessage += ` ${error.message}`; // Append the actual error message from the API
-      }
-      setErrorMessage(errorMessage);
+      setErrorMessage('An error occurred while generating images.');
       setSnackbarOpen(true);
     } finally {
       setIsLoading(false);
@@ -115,10 +98,9 @@ function App() {
     setStyle("🎨 Oil Painting");
     setMood("😌 Serene");
     setActiveTab("manual");
-    setImageURL("");
+    setImageURLs([]); // Reset to empty array
     setIsLoading(false);
     setSnackbarOpen(false);
-    setRevisedPrompt("");
   };
 
   const handleCloseSnackbar = () => {
@@ -130,18 +112,12 @@ function App() {
       <AppBar position="fixed" className="AppBar">
         <Toolbar>
           <img src="/logo512.png" alt="Logo" className="App-logo" />
-          <Typography
-            variant="h6"
-            color="inherit"
-            noWrap
-            style={{ flexGrow: 1 }}
-          >
+          <Typography variant="h6" color="inherit" noWrap style={{ flexGrow: 1 }}>
             AI Art Generator
           </Typography>
         </Toolbar>
       </AppBar>
       <div className="container">
-        {/* <h1>DALL·E 3 Art Generator</h1> */}
         {/* Tab Buttons */}
         <div className="tabs-container">
           <Button
@@ -157,8 +133,7 @@ function App() {
           >
             Predefined Options
           </Button>
-        </div>
-
+        {/* ... */}
         {/* Form */}
         <form onSubmit={handleSubmit} className="input-form">
           {activeTab === "manual" && (
@@ -169,7 +144,6 @@ function App() {
               onChange={(e) => setInputPrompt(e.target.value)}
             />
           )}
-
           {activeTab === "predefined" && (
             <>
               <TextField
@@ -210,54 +184,24 @@ function App() {
             </>
           )}
           {/* Generate Button */}
-
           <Button
             variant="contained"
             color="primary"
             type="submit"
             disabled={isLoading}
-            startIcon={
-              isLoading ? (
-                <CircularProgress size={24} color="secondary" />
-              ) : null
-            } // Show loading indicator as the startIcon when loading
-          // style={{
-          //   maxWidth: '200px',
-          //   alignItems: 'center',
-          // }}
+            startIcon={isLoading ? <CircularProgress size={24} color="secondary" /> : null} // Show loading indicator as the startIcon when loading
           >
             {isLoading ? "Generating..." : "Generate"}
           </Button>
         </form>
-
         {/* {isLoading && <CircularProgress />} */}
-        <div className="revised-prompt-container">
-          <p className="revised-prompt">{revisedPrompt}</p>
-        </div>
         {/* Image Display */}
-        {imageURL && (
-          <div className="image-container">
-            <img
-              src={imageURL}
-              alt="Generated from OpenAI"
-              className="generated-image"
-            />
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={handleReset}
-              style={{
-                marginTop: "20px",
-                marginLeft: "5px",
-                fontSize: "1rem",
-                borderRadius: "4px",
-              }}
-            >
-              Reset
-            </Button>
-          </div>
-        )}
-
+        {imageURLs.map((url, index) => (
+        <div key={index} className='image-container'>
+          <img src={url} alt={`Generated art ${index + 1}`} className='generated-image' />
+        </div>
+      ))}
+      </div>
         <Snackbar
           open={snackbarOpen}
           autoHideDuration={6000}
@@ -266,21 +210,297 @@ function App() {
         />
       </div>
       <BottomNavigation showLabels className="BottomNavigation" style={{ backgroundColor: '#1976D2', color: 'white' }}>
-
         {/* Copyright Information */}
         <div style={{ flexGrow: 1, textAlign: 'center', padding: '15px', color: 'white' }}>
           © {new Date().getFullYear()} AI Art Generator. All rights reserved.
         </div>
-
-        {/* <BottomNavigationAction label="LinkedIn" icon={<LinkedInIcon />} />
-  <BottomNavigationAction label="GitHub" icon={<GitHubIcon />} /> */}
       </BottomNavigation>
-      <Analytics />
     </div>
   );
 }
 
 export default App;
+
+// import React, { useState, useEffect } from "react";
+// import { OpenAI } from "openai";
+// import Button from "@mui/material/Button";
+// import TextField from "@mui/material/TextField";
+// import CircularProgress from "@mui/material/CircularProgress";
+// import Snackbar from "@mui/material/Snackbar";
+// import AppBar from "@mui/material/AppBar";
+// import Toolbar from "@mui/material/Toolbar";
+// import Typography from "@mui/material/Typography";
+// import BottomNavigation from "@mui/material/BottomNavigation";
+// // import BottomNavigationAction from "@mui/material/BottomNavigationAction";
+// // import LinkedInIcon from "@mui/icons-material/LinkedIn";
+// // import GitHubIcon from "@mui/icons-material/GitHub";
+// import { Analytics } from "@vercel/analytics/react";
+// //import Box from '@mui/material/Box';
+// import "./App.css";
+
+// // Helper function to get today's date as a string
+// const getTodayString = () => {
+//   const today = new Date();
+//   return today.toISOString().split("T")[0];
+// };
+
+// function App() {
+//   const [inputPrompt, setInputPrompt] = useState("");
+//   const [style, setStyle] = useState("🎨 Oil Painting");
+//   const [mood, setMood] = useState("😌 Serene");
+//   const [activeTab, setActiveTab] = useState("manual");
+//   const [imageURL, setImageURL] = useState("");
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [snackbarOpen, setSnackbarOpen] = useState(false);
+//   const [errorMessage, setErrorMessage] = useState("");
+//   const [error, setError] = useState(false);
+//   const [revisedPrompt, setRevisedPrompt] = useState("");
+
+//   // Replace with your own OpenAI API key
+//   const openai = new OpenAI({
+//     apiKey: process.env.REACT_APP_OPENAI_API_KEY,
+//     dangerouslyAllowBrowser: true,
+//   });
+
+//   const [dailyLimitReached, setDailyLimitReached] = useState(false);
+
+//   useEffect(() => {
+//     const today = getTodayString();
+//     const imageCount = parseInt(localStorage.getItem(today), 10) || 0;
+//     setDailyLimitReached(imageCount >= 5);
+//   }, []);
+
+//   const incrementImageCount = () => {
+//     const today = getTodayString();
+//     const imageCount = parseInt(localStorage.getItem(today), 10) || 0;
+//     localStorage.setItem(today, imageCount + 1);
+//   };
+
+//   const handleSubmit = async (event) => {
+//     event.preventDefault();
+
+//     // Check if daily limit is reached
+//     if (dailyLimitReached) {
+//       setErrorMessage(
+//         "Daily limit of 5 images reached. Please try again tomorrow."
+//       );
+//       setError(true);
+//       setSnackbarOpen(true);
+//       return;
+//     }
+
+//     setIsLoading(true);
+
+//     const combinedPrompt =
+//       activeTab === "manual"
+//         ? inputPrompt
+//         : `${inputPrompt}, Style: ${style}, Mood: ${mood}`;
+
+//     try {
+//       const response = await openai.images.generate({
+//         model: "dall-e-3",
+//         prompt: combinedPrompt,
+//         n: 1,
+//         size: "1024x1024",
+//       });
+//       console.log("Response from OpenAI:", response);
+//       setRevisedPrompt(response.data[0].revised_prompt);
+//       setImageURL(response.data[0].url);
+
+//       // Increment image count
+//       incrementImageCount();
+//       const today = getTodayString();
+//       const imageCount = parseInt(localStorage.getItem(today), 10) || 0;
+//       if (imageCount >= 5) {
+//         setDailyLimitReached(true);
+//       }
+//     } catch (error) {
+//       console.error("Error generating the image:", error);
+//       // Extracting the error message properly from the response
+//       let errorMessage =
+//         "An unexpected error occurred with the API. Please try again later";
+//       if (error instanceof Error) {
+//         // Check if the error is an instance of the Error class
+//         errorMessage += ` ${error.message}`; // Append the actual error message from the API
+//       }
+//       setErrorMessage(errorMessage);
+//       setSnackbarOpen(true);
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
+
+//   const handleReset = () => {
+//     setInputPrompt("");
+//     setStyle("🎨 Oil Painting");
+//     setMood("😌 Serene");
+//     setActiveTab("manual");
+//     setImageURL("");
+//     setIsLoading(false);
+//     setSnackbarOpen(false);
+//     setRevisedPrompt("");
+//   };
+
+//   const handleCloseSnackbar = () => {
+//     setSnackbarOpen(false);
+//   };
+
+//   return (
+//     <div className="App">
+//       <AppBar position="fixed" className="AppBar">
+//         <Toolbar>
+//           <img src="/logo512.png" alt="Logo" className="App-logo" />
+//           <Typography
+//             variant="h6"
+//             color="inherit"
+//             noWrap
+//             style={{ flexGrow: 1 }}
+//           >
+//             AI Art Generator
+//           </Typography>
+//         </Toolbar>
+//       </AppBar>
+//       <div className="container">
+//         {/* <h1>DALL·E 3 Art Generator</h1> */}
+//         {/* Tab Buttons */}
+//         <div className="tabs-container">
+//           <Button
+//             variant={activeTab === "manual" ? "contained" : "outlined"}
+//             onClick={() => setActiveTab("manual")}
+//             style={{ marginRight: "10px" }} // Add right margin to the first button
+//           >
+//             Manual Prompt
+//           </Button>
+//           <Button
+//             variant={activeTab === "predefined" ? "contained" : "outlined"}
+//             onClick={() => setActiveTab("predefined")}
+//           >
+//             Predefined Options
+//           </Button>
+//         </div>
+
+//         {/* Form */}
+//         <form onSubmit={handleSubmit} className="input-form">
+//           {activeTab === "manual" && (
+//             <TextField
+//               fullWidth
+//               label="Enter a description..."
+//               value={inputPrompt}
+//               onChange={(e) => setInputPrompt(e.target.value)}
+//             />
+//           )}
+
+//           {activeTab === "predefined" && (
+//             <>
+//               <TextField
+//                 fullWidth
+//                 label="Enter a base description..."
+//                 value={inputPrompt}
+//                 onChange={(e) => setInputPrompt(e.target.value)}
+//               />
+//               {/* ... style and mood selectors */}
+//               {activeTab === "predefined" && (
+//                 <>
+//                   <div className="select-row">
+//                     <div className="select-wrapper">
+//                       <select
+//                         value={style}
+//                         onChange={(e) => setStyle(e.target.value)}
+//                         className="option-select"
+//                       >
+//                         <option value="🎨 Oil Painting">🎨 Oil Painting</option>
+//                         <option value="🖌️ Watercolor">🖌️ Watercolor</option>
+//                         <option value="💻 Digital Art">💻 Digital Art</option>
+//                       </select>
+//                     </div>
+//                     <div className="select-wrapper">
+//                       <select
+//                         value={mood}
+//                         onChange={(e) => setMood(e.target.value)}
+//                         className="option-select"
+//                       >
+//                         <option value="😌 Serene">😌 Serene</option>
+//                         <option value="🌀 Chaotic">🌀 Chaotic</option>
+//                         <option value="🔮 Mystical">🔮 Mystical</option>
+//                       </select>
+//                     </div>
+//                   </div>
+//                 </>
+//               )}
+//             </>
+//           )}
+//           {/* Generate Button */}
+
+//           <Button
+//             variant="contained"
+//             color="primary"
+//             type="submit"
+//             disabled={isLoading}
+//             startIcon={
+//               isLoading ? (
+//                 <CircularProgress size={24} color="secondary" />
+//               ) : null
+//             } // Show loading indicator as the startIcon when loading
+//           // style={{
+//           //   maxWidth: '200px',
+//           //   alignItems: 'center',
+//           // }}
+//           >
+//             {isLoading ? "Generating..." : "Generate"}
+//           </Button>
+//         </form>
+
+//         {/* {isLoading && <CircularProgress />} */}
+//         <div className="revised-prompt-container">
+//           <p className="revised-prompt">{revisedPrompt}</p>
+//         </div>
+//         {/* Image Display */}
+//         {imageURL && (
+//           <div className="image-container">
+//             <img
+//               src={imageURL}
+//               alt="Generated from OpenAI"
+//               className="generated-image"
+//             />
+//             <Button
+//               variant="outlined"
+//               color="secondary"
+//               onClick={handleReset}
+//               style={{
+//                 marginTop: "20px",
+//                 marginLeft: "5px",
+//                 fontSize: "1rem",
+//                 borderRadius: "4px",
+//               }}
+//             >
+//               Reset
+//             </Button>
+//           </div>
+//         )}
+
+//         <Snackbar
+//           open={snackbarOpen}
+//           autoHideDuration={6000}
+//           onClose={handleCloseSnackbar}
+//           message={errorMessage}
+//         />
+//       </div>
+//       <BottomNavigation showLabels className="BottomNavigation" style={{ backgroundColor: '#1976D2', color: 'white' }}>
+
+//         {/* Copyright Information */}
+//         <div style={{ flexGrow: 1, textAlign: 'center', padding: '15px', color: 'white' }}>
+//           © {new Date().getFullYear()} AI Art Generator. All rights reserved.
+//         </div>
+
+//         {/* <BottomNavigationAction label="LinkedIn" icon={<LinkedInIcon />} />
+//   <BottomNavigationAction label="GitHub" icon={<GitHubIcon />} /> */}
+//       </BottomNavigation>
+//       <Analytics />
+//     </div>
+//   );
+// }
+
+// export default App;
 
 // import { increment } from 'firebase/firestore';
 // import { getFirestore } from 'firebase/firestore';
